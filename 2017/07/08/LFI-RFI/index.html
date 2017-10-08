@@ -77,7 +77,7 @@
 <link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="HTTP," />
+  <meta name="keywords" content="PHP," />
 
 
 
@@ -93,16 +93,24 @@
 
 
 
-<meta name="description" content="在读《Web安全深度剖析》时看到一些关于HTTP协议的东西，记录下来，供以后查看，学习。">
+<meta name="description" content="文件包含与php伪协议是在CTF中经常遇到的考点">
 <meta property="og:type" content="article">
-<meta property="og:title" content="http协议">
-<meta property="og:url" content="http://isron.cn/2016/11/08/http/index.html">
+<meta property="og:title" content="文件包含与php伪协议小结">
+<meta property="og:url" content="http://isron.cn/2017/07/08/LFI-RFI/index.html">
 <meta property="og:site_name" content="Isron">
-<meta property="og:description" content="在读《Web安全深度剖析》时看到一些关于HTTP协议的东西，记录下来，供以后查看，学习。">
-<meta property="og:updated_time" content="2017-06-17T11:46:47.502Z">
+<meta property="og:description" content="文件包含与php伪协议是在CTF中经常遇到的考点">
+<meta property="og:image" content="https://s1.ax1x.com/2017/10/08/3gVFe.png">
+<meta property="og:image" content="https://s1.ax1x.com/2017/10/08/3gZJH.png">
+<meta property="og:image" content="https://s1.ax1x.com/2017/10/08/3gYWj.png">
+<meta property="og:image" content="https://s1.ax1x.com/2017/10/08/3gUln.png">
+<meta property="og:image" content="https://s1.ax1x.com/2017/10/08/3gdO0.png">
+<meta property="og:image" content="https://s1.ax1x.com/2017/10/08/32En0.png">
+<meta property="og:image" content="https://s1.ax1x.com/2017/10/08/32VBV.png">
+<meta property="og:updated_time" content="2017-10-08T15:19:51.086Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="http协议">
-<meta name="twitter:description" content="在读《Web安全深度剖析》时看到一些关于HTTP协议的东西，记录下来，供以后查看，学习。">
+<meta name="twitter:title" content="文件包含与php伪协议小结">
+<meta name="twitter:description" content="文件包含与php伪协议是在CTF中经常遇到的考点">
+<meta name="twitter:image" content="https://s1.ax1x.com/2017/10/08/3gVFe.png">
 
 
 
@@ -130,13 +138,13 @@
 
 
 
-  <link rel="canonical" href="http://isron.cn/2016/11/08/http/"/>
+  <link rel="canonical" href="http://isron.cn/2017/07/08/LFI-RFI/"/>
 
 
 
 
 
-  <title>http协议 | Isron</title>
+  <title>文件包含与php伪协议小结 | Isron</title>
   
 
 
@@ -309,7 +317,7 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://isron.cn/2016/11/08/http/">
+    <link itemprop="mainEntityOfPage" href="http://isron.cn/2017/07/08/LFI-RFI/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Isron">
@@ -326,7 +334,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">http协议</h1>
+          <h1 class="post-title" itemprop="name headline">文件包含与php伪协议小结</h1>
         
 
         <div class="post-meta">
@@ -338,8 +346,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-11-08T17:59:28+08:00">
-                2016-11-08
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-08T13:15:58+08:00">
+                2017-07-08
               </time>
             
 
@@ -361,8 +369,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
-                    <span itemprop="name">读书笔记</span>
+                  <a href="/categories/CTF/" itemprop="url" rel="index">
+                    <span itemprop="name">CTF</span>
                   </a>
                 </span>
 
@@ -379,7 +387,7 @@
                 <span class="post-meta-item-icon">
                   <i class="fa fa-comment-o"></i>
                 </span>
-                <a class="cloud-tie-join-count" href="/2016/11/08/http/#comments" itemprop="discussionUrl">
+                <a class="cloud-tie-join-count" href="/2017/07/08/LFI-RFI/#comments" itemprop="discussionUrl">
                   <span class="post-comments-count join-count" itemprop="commentCount"></span>
                 </a>
               </span>
@@ -405,37 +413,19 @@
       
 
       
-        <p>在读《Web安全深度剖析》时看到一些关于HTTP协议的东西，记录下来，供以后查看，学习。<br><a id="more"></a></p>
-<h2 id="HTTP协议概述"><a href="#HTTP协议概述" class="headerlink" title="HTTP协议概述"></a>HTTP协议概述</h2><p>　　HTTP是一种无状态的协议。无状态是指Web浏览器与Web服务器之间不需要建立持久的连接，也就是说当一个客户端向服务器发出请求，然后web服务器返回响应，连接就被关闭了，在服务器端不保留连接的有关信息。<br>　　HTTP请求只能由客户端发起，而服务器不能主动向客户发送数据。</p>
-<h2 id="HTTP请求方法"><a href="#HTTP请求方法" class="headerlink" title="HTTP请求方法"></a>HTTP请求方法</h2><h3 id="GET"><a href="#GET" class="headerlink" title="GET"></a>GET</h3><p>　　GET方法用于获取请求页面的指定信息。如果请求资源为动态脚本，那么返回文本是Web容器解析后的HTML源代码，而不是源文件。</p>
-<h3 id="HEAD"><a href="#HEAD" class="headerlink" title="HEAD"></a>HEAD</h3><p>　　HEAD方法除了服务器不能在响应里面返回消息主体外，其他都与GET方法相同。此方法经常被用来测试超文本链接的有效性，可访问性和最近的改变。攻击者编写扫描工具时，就常用此方法，因为只测试资源是否存在，而不用返回消息主题，速度是最快的。</p>
-<h3 id="POST"><a href="#POST" class="headerlink" title="POST"></a>POST</h3><p>　　POST方法也与GET方法相似，但最大的区别在于，GET方法没有请求内容，而POST是有请求内容的。POST    请求最多用于向服务器发送大量的数据。GET虽然也能发送数据，但是有长度的限制，并且GET请求会将发送的数据显示在浏览器端，二POST则不会。所以安全性相对来说高一点。<br>　　例如，上传文件，提交留言等，只要是想服务器传输大量的数据，通常都会使用POST请求。</p>
-<h3 id="PUT"><a href="#PUT" class="headerlink" title="PUT"></a>PUT</h3><p>　　PUT方法用于请求服务器把请求中的实体存储在请求资源下，如果请求资源已经在服务器中存在，那么将会用此请求中的数据替换原先的数据，作为指定资源的最新修改版。如果请求指定的资源不存在，将会创建这个资源，且数据位于请求正文。<br>　　通常情况下，服务器都会关闭PUT方法，因为它会为服务器创建文件，属于危险操作。</p>
-<h3 id="DELETE"><a href="#DELETE" class="headerlink" title="DELETE"></a>DELETE</h3><p>　　DELETE方法用于请求源服务器删除请求的指定资源。服务器一般会关闭此方法，因为客户端可以进行删除文件操作，同样属于危险操作。</p>
-<h3 id="TRACE"><a href="#TRACE" class="headerlink" title="TRACE"></a>TRACE</h3><p>　　TRACE方法用于激发一个远程的应用层的请求信息回路，也就是说，回显服务器收到的请求。TRACE方法允许客户端去了解数据被请求链的另一端接收的情况，并且利用那些数据信息去测试或诊断。不过较为少见。</p>
-<h3 id="CONNECT"><a href="#CONNECT" class="headerlink" title="CONNECT"></a>CONNECT</h3><p>　　CONNECT方法是为了用于能动态切换到隧道的代理。</p>
-<h3 id="OPTIONS"><a href="#OPTIONS" class="headerlink" title="OPTIONS"></a>OPTIONS</h3><p>　　OPTIONS方法是用于请求获得由URI标识的资源在请求/响应的通信过程中可以使用的功能选项。通过这个方法，客户端可以在采取具体资源请求之前，决定对该资源采取何种必要措施，或者了解服务器的性能。</p>
-<h2 id="HTTP状态码"><a href="#HTTP状态码" class="headerlink" title="HTTP状态码"></a>HTTP状态码</h2><p>　　当客户端发出HTTP请求，服务器端接收后，会向客户发送响应信息，其中，HTTP响应中的第一行中，最重要的一点就是HTTP的状态码。HTTP协议中的状态码由三位数字组成。第一位数字定义了响应的类别，且只有以下5种。</p>
-<h3 id="1xx"><a href="#1xx" class="headerlink" title="1xx"></a>1xx</h3><p>　　信息提示，表示请求已被成功接收，继续处理。范围为100～101。</p>
-<h3 id="2xx"><a href="#2xx" class="headerlink" title="2xx"></a>2xx</h3><p>　　成功，服务器成功的处理了请求。范围为200～206。</p>
-<h3 id="3xx"><a href="#3xx" class="headerlink" title="3xx"></a>3xx</h3><p>　　重定向，重定向状态码用于告诉浏览器客户端，他们访问的资源已被移动，并告诉客户端新的资源地址位置。这时，浏览器将重新对新资源发起请求。范围为300～305。</p>
-<h3 id="4xx"><a href="#4xx" class="headerlink" title="4xx"></a>4xx</h3><p>　　客户端错误状态码，有时客户端会发送一些服务器无法处理的东西，比如格式错误的请求，或者最常见的请求一个不存在的URL。其范围为400～415。</p>
-<h3 id="5xx"><a href="#5xx" class="headerlink" title="5xx"></a>5xx</h3><p>　　有时候客户端发送了一条有效请求，但Web服务器自身却出错了，可能是Web服务器运行出错了，或者网站都挂了，5xx就是用来描述服务器内部错误的。范围为500～505。</p>
-<h3 id="常见状态码"><a href="#常见状态码" class="headerlink" title="常见状态码"></a>常见状态码</h3><pre><code>200: 客户端请求成功
-302: 重定向
-404: 请求资源不存在
-400: 客户端请求有语法错误，不能被服务器所理解
-401: 请求未经授权
-403: 服务器收到请求，但是拒绝提供服务
-500: 服务器内部错误
-503: 服务器当前不能处理客户端的请求，一段时间后可能恢复
-</code></pre><h2 id="HTTP消息"><a href="#HTTP消息" class="headerlink" title="HTTP消息"></a>HTTP消息</h2><p>　　HTTP消息又称为HTTP头（HTTP header），由四部分组成，分别是请求头，响应头，普通头和实体头。</p>
-<h3 id="请求头"><a href="#请求头" class="headerlink" title="请求头"></a>请求头</h3><p>　　请求头只出现在HTTP请求中，请求报头允许客户端向服务器传递请求的附加信息和客户端自身的信息。常见的HTTP请求头如下：</p>
-<pre><code>Host ：指定被请求资源的Internet主机和端口号
-User-Agent：操作系统，浏览器版本及其他属性
-Referer：代表当前访问URL的上一个URL
-Cookie：一段文本，常用来表示请求者的身份
-</code></pre>
+        <p>文件包含与php伪协议是在CTF中经常遇到的考点<a id="more"></a></p>
+<h1 id="文件包含"><a href="#文件包含" class="headerlink" title="文件包含"></a>文件包含</h1><p>文件包含在PHP中主要是由<code>include()</code>函数与<code>require()</code>函数实现。</p>
+<h2 id="本地文件包含"><a href="#本地文件包含" class="headerlink" title="本地文件包含"></a>本地文件包含</h2><p>LFI(Local File Include)也就是本地文件包含<br><figure class="highlight php"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&lt;?php</span></div><div class="line">error_reporting(<span class="number">0</span>);</div><div class="line">$file = $_GET[<span class="string">"file"</span>];</div><div class="line"><span class="keyword">include</span>($file);</div><div class="line"><span class="meta">?&gt;</span></div></pre></td></tr></table></figure></p>
+<p><img src="https://s1.ax1x.com/2017/10/08/3gVFe.png" alt=""><br>可以通过php伪协议得到源码即<br><code>php://filter/read=convert.base64-encode/resource=index.php</code><br><img src="https://s1.ax1x.com/2017/10/08/3gZJH.png" alt=""><br>base64解码后就是源码，可以做到任意文件读取</p>
+<h2 id="远程文件包含"><a href="#远程文件包含" class="headerlink" title="远程文件包含"></a>远程文件包含</h2><p>RFI(Remote File Include)远程文件包含，要保证php.ini中allow_url_fopen和allow_url_include（默认为Off）要为On<br>还是如上代码，远程文件包含也就是将本地文件换成远程文件<br><img src="https://s1.ax1x.com/2017/10/08/3gYWj.png" alt=""><br>当然相比于本地文件包含问题更大，在vps上写一个text.txt，内容为一句话木马，然后远程文件包含，后果可想而知</p>
+<h1 id="PHP伪协议"><a href="#PHP伪协议" class="headerlink" title="PHP伪协议"></a>PHP伪协议</h1><h2 id="php-filter"><a href="#php-filter" class="headerlink" title="php://filter"></a>php://filter</h2><p>对本地磁盘文件进行读写，最常用到的也就是在文件包含中通过base64编码，获取文件源码</p>
+<h2 id="php：-input"><a href="#php：-input" class="headerlink" title="php：//input"></a>php：//input</h2><p><img src="https://s1.ax1x.com/2017/10/08/3gUln.png" alt=""><br>将post的数据当做一个文件原始数据的只读流到file参数中，<br>当目标支持远程文件包含时<br><img src="https://s1.ax1x.com/2017/10/08/3gdO0.png" alt=""><br>可以进行任意代码执行</p>
+<h2 id="phar-zip"><a href="#phar-zip" class="headerlink" title="phar:// zip://"></a>phar:// zip://</h2><p>php归档协议<br><figure class="highlight dts"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="symbol">phar:</span><span class="comment">//1.jpg/1.php</span></div><div class="line"><span class="symbol">zip:</span><span class="comment">//1.jpg%231.php</span></div></pre></td></tr></table></figure></p>
+<p><img src="https://s1.ax1x.com/2017/10/08/32En0.png" alt=""><br><img src="https://s1.ax1x.com/2017/10/08/32VBV.png" alt=""></p>
+<h1 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h1><figure class="highlight php"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&lt;?php</span></div><div class="line">error_reporting(<span class="number">0</span>);</div><div class="line">$file = $_GET[<span class="string">"file"</span>];</div><div class="line"><span class="keyword">if</span>(<span class="keyword">isset</span>($file)&amp;&amp;file_get_contents($file))&#123;</div><div class="line">    <span class="keyword">echo</span> file_get_contents($file);</div><div class="line">&#125;<span class="keyword">else</span>&#123;</div><div class="line">    <span class="keyword">echo</span> <span class="string">"403 "</span>;</div><div class="line">&#125;</div><div class="line"><span class="meta">?&gt;</span></div></pre></td></tr></table></figure>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="title">file_get_contents</span><span class="params">()</span></span> 整个文件读入一个字符串中</div></pre></td></tr></table></figure>
+<p>通过<code>file_get_contents</code>可以进行ssrf，在某台内网机器的80端口发现flag</p>
+
       
     </div>
 
@@ -463,7 +453,7 @@ Cookie：一段文本，常用来表示请求者的身份
     </li>
     <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="http://isron.cn/2016/11/08/http/" title="http协议">http://isron.cn/2016/11/08/http/</a>
+      <a href="http://isron.cn/2017/07/08/LFI-RFI/" title="文件包含与php伪协议小结">http://isron.cn/2017/07/08/LFI-RFI/</a>
     </li>
     <li class="post-copyright-license">
       <strong>版权声明： </strong>
@@ -479,7 +469,7 @@ Cookie：一段文本，常用来表示请求者的身份
       
         <div class="post-tags">
           
-            <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+            <a href="/tags/PHP/" rel="tag"># PHP</a>
           
         </div>
       
@@ -492,8 +482,8 @@ Cookie：一段文本，常用来表示请求者的身份
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/10/25/sqli-labs/" rel="next" title="sqli-labs学习笔记总结">
-                <i class="fa fa-chevron-left"></i> sqli-labs学习笔记总结
+              <a href="/2017/06/18/ftp_sshscan/" rel="next" title="简单的ftp，ssh弱口令探测">
+                <i class="fa fa-chevron-left"></i> 简单的ftp，ssh弱口令探测
               </a>
             
           </div>
@@ -501,10 +491,6 @@ Cookie：一段文本，常用来表示请求者的身份
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/11/09/nanyou/" rel="prev" title="南邮CTF">
-                南邮CTF <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -694,7 +680,7 @@ Cookie：一段文本，常用来表示请求者的身份
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP协议概述"><span class="nav-number">1.</span> <span class="nav-text">HTTP协议概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP请求方法"><span class="nav-number">2.</span> <span class="nav-text">HTTP请求方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GET"><span class="nav-number">2.1.</span> <span class="nav-text">GET</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HEAD"><span class="nav-number">2.2.</span> <span class="nav-text">HEAD</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#POST"><span class="nav-number">2.3.</span> <span class="nav-text">POST</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PUT"><span class="nav-number">2.4.</span> <span class="nav-text">PUT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DELETE"><span class="nav-number">2.5.</span> <span class="nav-text">DELETE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TRACE"><span class="nav-number">2.6.</span> <span class="nav-text">TRACE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CONNECT"><span class="nav-number">2.7.</span> <span class="nav-text">CONNECT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OPTIONS"><span class="nav-number">2.8.</span> <span class="nav-text">OPTIONS</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP状态码"><span class="nav-number">3.</span> <span class="nav-text">HTTP状态码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1xx"><span class="nav-number">3.1.</span> <span class="nav-text">1xx</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2xx"><span class="nav-number">3.2.</span> <span class="nav-text">2xx</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3xx"><span class="nav-number">3.3.</span> <span class="nav-text">3xx</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4xx"><span class="nav-number">3.4.</span> <span class="nav-text">4xx</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5xx"><span class="nav-number">3.5.</span> <span class="nav-text">5xx</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常见状态码"><span class="nav-number">3.6.</span> <span class="nav-text">常见状态码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP消息"><span class="nav-number">4.</span> <span class="nav-text">HTTP消息</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#请求头"><span class="nav-number">4.1.</span> <span class="nav-text">请求头</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#文件包含"><span class="nav-number">1.</span> <span class="nav-text">文件包含</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#本地文件包含"><span class="nav-number">1.1.</span> <span class="nav-text">本地文件包含</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#远程文件包含"><span class="nav-number">1.2.</span> <span class="nav-text">远程文件包含</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PHP伪协议"><span class="nav-number">2.</span> <span class="nav-text">PHP伪协议</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#php-filter"><span class="nav-number">2.1.</span> <span class="nav-text">php://filter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#php：-input"><span class="nav-number">2.2.</span> <span class="nav-text">php：//input</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#phar-zip"><span class="nav-number">2.3.</span> <span class="nav-text">phar:// zip://</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#题目"><span class="nav-number">3.</span> <span class="nav-text">题目</span></a></li></ol></div>
             
 
           </div>
