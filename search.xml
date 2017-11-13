@@ -4,6 +4,35 @@
   
     
     <entry>
+      <title><![CDATA[基于kali的无线破解]]></title>
+      <url>http://isron.cn/2017/09/20/attack_wlan/</url>
+      <content type="html"><![CDATA[<p>无线网络老师让做一个关于无线安全的报告，于是就有了这篇小白文<a id="more"></a></p>
+<h2 id="环境搭建"><a href="#环境搭建" class="headerlink" title="环境搭建"></a>环境搭建</h2><p>由于在虚拟机中并不能使用本机的无线网卡，所以有两种方案解决：</p>
+<ol>
+<li>买一个USB无线网卡，某宝大概二三十块钱</li>
+<li>使用VMware将Kali装到U盘中启动</li>
+</ol>
+<p>当然我选择的是后者</p>
+<h2 id="无线破解"><a href="#无线破解" class="headerlink" title="无线破解"></a>无线破解</h2><p>使用工具：aircrack-ng组件，无线网卡</p>
+<h3 id="查看网卡"><a href="#查看网卡" class="headerlink" title="查看网卡"></a>查看网卡</h3><p><code>ifconfig</code>我这里是wlan0</p>
+<h3 id="开启网卡监听"><a href="#开启网卡监听" class="headerlink" title="开启网卡监听"></a>开启网卡监听</h3><p><code>airmon-ng start wlan0</code><br><img src="./img/1.png" alt=""></p>
+<h3 id="查看周围的无线网络信息"><a href="#查看周围的无线网络信息" class="headerlink" title="查看周围的无线网络信息"></a>查看周围的无线网络信息</h3><p><code>airodump-ng wlan0mon</code><br><img src="./img/2.png" alt=""><br>BSSID为该wlan的mac地址，CH是wlan的工作信道，记录下Test的BSSID和工作信道</p>
+<h3 id="对目标无线网络进行监听"><a href="#对目标无线网络进行监听" class="headerlink" title="对目标无线网络进行监听"></a>对目标无线网络进行监听</h3><p><img src="./img/3.png" alt=""><br><code>-c 是指定工作信道</code> <code>-w 是我们保存网络数据的文件名，有最为重要的握手包</code><br><img src="./img/4.png" alt=""><br>现在是无人连接状态，当有人接入时会自动获取握手包<br><img src="./img/5.png" alt=""><br><code>WPA handshake</code></p>
+<h3 id="什么是握手包"><a href="#什么是握手包" class="headerlink" title="什么是握手包"></a>什么是握手包</h3><p>握手包是指用WPA加密方式的无线AP与无线客户端进行连接的认证信息包，其中包含了信息原文和被加密的密文</p>
+<h3 id="deauth攻击"><a href="#deauth攻击" class="headerlink" title="deauth攻击"></a>deauth攻击</h3><p>也叫取消验证洪水攻击，是无线Dos攻击的一种，通过欺骗从AP到客户端的单播地址的取消身份验证帧来将客户端转换为为认证状态，简单来说就是构造一些数据包使得AP取消与客户端的连接，让客户端掉线。<br>当客户端掉线重连时，我们可以通过之前的监听获取握手包。<br><code>aireplay-ng</code>就有这种功能<br><img src="./img/6.png" alt=""><br><code>-0 是攻击方式为deauth攻击</code> <code>20 为攻击次数20次</code> <code>-a 为ap的mac地址</code> <code>-c 为客户端mac</code><br><img src="./img/7.png" alt=""></p>
+<h3 id="密码破解"><a href="#密码破解" class="headerlink" title="密码破解"></a>密码破解</h3><p>使用<code>aircaark-ng</code>这个模块，对抓到的握手包进行跑包，暴力破解<br><img src="./img/8.png" alt=""><br>得到wifi密码</p>
+]]></content>
+      
+        
+        <tags>
+            
+            <tag> Web安全 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[文件包含与php伪协议小结]]></title>
       <url>http://isron.cn/2017/07/08/LFI-RFI/</url>
       <content type="html"><![CDATA[<p>文件包含与php伪协议是在CTF中经常遇到的考点<a id="more"></a></p>
